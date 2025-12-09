@@ -25,8 +25,8 @@
 
         /* 输入框与按钮 */
         .input-group { display: flex; margin-bottom: 8px; }
-        input[type="text"] { flex: 1; padding: 6px; border: 1px solid #bdc3c7; border-radius: 4px 0 0 4px; font-family: monospace; font-size: 11px; outline: none; }
-        input[type="text"]:focus { border-color: #3498db; }
+        td > input { padding: 6px; border: 1px solid #bdc3c7; border-radius: 4px 0 0 4px; font-family: monospace; font-size: 11px; outline: none; }
+        td > input:focus { border-color: #3498db; }
         
         button { border: none; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s; padding: 8px; font-size: 11px; }
         .btn-scan { background: #3498db; width: 100%; border-radius: 4px; }
@@ -70,8 +70,21 @@
             <div class="card-title" style="background: #fff0eb; color: #c0392b;">3. RCE Exploit (CVE-2025-55182)</div>
             <div class="card-body">
                 <div class="input-group">
-                    <input type="text" id="cmdInput" placeholder="Command (echo vulnerability_test)" value="echo vulnerability_test">
-                    <button id="btnExploit" class="btn-exploit">EXEC</button>
+                    <table style="flex: 4">
+                        <tr>
+                            <th><label for="cmdInput" title="Command">CMD</label></th>
+                            <td><input type="text" id="cmdInput" placeholder="Command (echo vulnerability_test)" value="echo vulnerability_test"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="padInput" title="Anti-WAF padding (kb)">Pad</label></th>
+                            <td><input type="number" id="padInput" placeholder="Anti-WAF padding (kb)" value="128">&nbsp;kb</td>
+                        </tr>
+                        <tr>
+                            <th><label for="vercelInput" title="Bypass Vercel WAF">Vercel</label></th>
+                            <td><input style="flex:1" type="checkbox" id="vercelInput" value="false"></td>
+                        </tr>
+                    </table>
+                    <button id="btnExploit" class="btn-exploit" style="flex: 1">EXEC</button>
                 </div>
                 <div id="exploit-status" style="font-size: 10px; color: #7f8c8d; display:none;">Sending payload...</div>
                 <div id="exploit-result" class="result-box">

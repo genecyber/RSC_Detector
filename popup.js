@@ -7,9 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
         activeList: document.getElementById('active-list'),
         btnExploit: document.getElementById('btnExploit'),
         cmdInput: document.getElementById('cmdInput'),
+        padInput: document.getElementById('padInput'),
+        vercelInput: document.getElementById('vercelInput'),
         exploitStatus: document.getElementById('exploit-status'),
         exploitResult: document.getElementById('exploit-result'),
-        rceOutput: document.getElementById('rce-output')
+        rceOutput: document.getElementById('rce-output'),
     };
 
     // 1. 获取当前 Tab
@@ -69,13 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 交互：RCE 利用 ---
         el.btnExploit.addEventListener('click', () => {
-            const cmd = el.cmdInput.value || "whoami";
-            el.btnExploit.disabled = true;
+            const cmd = el.cmdInput.value;
+            const pad = +(el.padInput.value) || 0;
+            const bypassVercel = el.vercelInput.checked;
             el.exploitStatus.style.display = 'block';
             el.exploitResult.style.display = 'none';
             el.rceOutput.className = 'console-out'; // 重置样式
 
-            chrome.tabs.sendMessage(tabId, {action: "run_exploit", cmd: cmd}, (res) => {
+            chrome.tabs.sendMessage(tabId, {action: "run_exploit", cmd, pad, bypassVercel}, (res) => {
                 el.btnExploit.disabled = false;
                 el.exploitStatus.style.display = 'none';
                 el.exploitResult.style.display = 'block';

@@ -16,6 +16,8 @@ This extension is designed for **educational and security research purposes only
 
 ### 🎯 Active Fingerprinting
 - Sends controlled RSC probe requests
+   - Adds prefix padding to bypass some WAFs
+   - Uses `$3` bypass for Vercel WAF
 - Analyzes server responses for RSC characteristics
 - Identifies Content-Type headers indicating RSC usage
 - Detects Vary headers containing 'RSC'

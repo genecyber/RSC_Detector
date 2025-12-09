@@ -16,6 +16,8 @@
 
 ### 🎯 主动指纹识别
 - 发送受控的 RSC 探测请求
+  - 支持通过前缀 padding 绕过一些 WAF
+  - 支持通过 $3 绕过 Vercel WAF
 - 分析服务器响应的 RSC 特征
 - 识别指示 RSC 使用的 Content-Type 头
 - 检测包含 'RSC' 的 Vary 头
